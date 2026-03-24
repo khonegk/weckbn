@@ -1,0 +1,1271 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WECkbn — WEC & IMSA</title>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,300;0,400;0,700;0,900;1,900&family=Barlow:wght@300;400;500;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --blue-dark: #050C1A;
+            --blue-mid: #0A1628;
+            --blue-3: #0F2040;
+            --blue-4: #163058;
+            --blue-accent: #1A6FBF;
+            --blue-bright: #2E9CFF;
+            --blue-glow: #4ABAFF;
+            --yellow: #FFD166;
+            --yellow-dim: #C9A53A;
+            --white: #EEF4FF;
+            --gray: #1E2E45;
+            --gray2: #5A7A9A;
+            --gray3: #8BA8C4;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+
+        body {
+            background: var(--blue-dark);
+            color: var(--white);
+            font-family: 'Barlow', sans-serif;
+            overflow-x: hidden;
+            cursor: none;
+        }
+
+        /* CURSOR */
+        .cursor {
+            width: 10px; height: 10px;
+            background: var(--blue-bright);
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            transform: translate(-50%,-50%);
+            transition: width .15s, height .15s;
+            mix-blend-mode: screen;
+        }
+        .cursor-ring {
+            width: 32px; height: 32px;
+            border: 1px solid rgba(46,156,255,0.45);
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9998;
+            transform: translate(-50%,-50%);
+            transition: all .14s ease;
+        }
+
+        /* NAV */
+        nav {
+            position: fixed; top: 0; left: 0; right: 0;
+            z-index: 1000;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 18px 48px;
+            background: linear-gradient(to bottom, rgba(5,12,26,.97), transparent);
+            backdrop-filter: blur(3px);
+        }
+        .nav-logo {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-weight: 900; font-size: 22px;
+            letter-spacing: .12em; text-transform: uppercase;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .nav-logo .dot {
+            width: 8px; height: 8px;
+            background: var(--yellow); border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%,100% { opacity:1; transform:scale(1); box-shadow:0 0 0 0 rgba(255,209,102,.4); }
+            50% { opacity:.7; transform:scale(1.3); box-shadow:0 0 0 6px rgba(255,209,102,0); }
+        }
+        .nav-links { display:flex; gap:32px; list-style:none; }
+        .nav-links a {
+            font-family:'Barlow Condensed',sans-serif;
+            font-size:13px; font-weight:700; letter-spacing:.2em;
+            text-transform:uppercase; text-decoration:none; color:var(--gray2);
+            transition:color .2s; position:relative; cursor:none;
+        }
+        .nav-links a::after {
+            content:''; position:absolute; bottom:-4px; left:0; right:0;
+            height:2px; background:var(--blue-bright); transform:scaleX(0); transition:transform .2s;
+        }
+        .nav-links a:hover { color:var(--white); }
+        .nav-links a:hover::after { transform:scaleX(1); }
+        .nav-links a.active { color:var(--white); }
+        .nav-links a.active::after { transform:scaleX(1); }
+
+        /* PAGES */
+        .page { display:none; }
+        .page.active { display:block; }
+
+        /* ===== HERO ===== */
+        .hero {
+            height:100vh; position:relative;
+            display:flex; align-items:flex-end;
+            overflow:hidden; padding:0 48px 72px;
+        }
+        .hero-bg {
+            position:absolute; inset:0;
+            background:
+                    radial-gradient(ellipse at 20% 80%, rgba(26,111,191,.12) 0%, transparent 55%),
+                    radial-gradient(ellipse at 80% 30%, rgba(46,156,255,.07) 0%, transparent 50%),
+                    var(--blue-dark);
+            z-index:0;
+        }
+
+        /* Speed lines */
+        .speed-lines { position:absolute; inset:0; overflow:hidden; z-index:1; }
+        .speed-line {
+            position:absolute; height:1px;
+            background:linear-gradient(to left, transparent, rgba(46,156,255,.35), transparent);
+            animation:speedLine 3s linear infinite; transform-origin:right;
+        }
+        @keyframes speedLine {
+            0%   { transform:scaleX(0) translateX(100vw); opacity:0; }
+            15%  { opacity:1; }
+            85%  { opacity:1; }
+            100% { transform:scaleX(1) translateX(-10vw); opacity:0; }
+        }
+
+        /* Hypercar SVG */
+        .car-silhouette {
+            position:absolute; right:-4%; top:50%; transform:translateY(-50%);
+            width:62%; z-index:2;
+        }
+        .car-svg {
+            width:100%;
+            filter:drop-shadow(0 0 48px rgba(46,156,255,.22)) drop-shadow(0 0 120px rgba(26,111,191,.18));
+            animation:carFloat 5s ease-in-out infinite;
+        }
+        @keyframes carFloat {
+            0%,100% { transform:translateY(0); }
+            50% { transform:translateY(-10px); }
+        }
+
+        .hero-content { position:relative; z-index:3; max-width:600px; }
+        .hero-badge {
+            font-family:'Share Tech Mono',monospace; font-size:11px;
+            color:var(--blue-bright); letter-spacing:.35em; text-transform:uppercase;
+            margin-bottom:20px; display:flex; align-items:center; gap:12px;
+        }
+        .hero-badge::before { content:''; width:28px; height:1px; background:var(--blue-bright); }
+
+        .hero-title {
+            font-family:'Barlow Condensed',sans-serif;
+            font-weight:900; font-style:italic;
+            font-size:clamp(68px,8.5vw,128px);
+            line-height:.88; text-transform:uppercase; letter-spacing:-.02em;
+        }
+        .hero-title .line-outline {
+            -webkit-text-stroke:2px var(--white); color:transparent; display:block;
+        }
+        .hero-title .line-yellow { color:var(--yellow); display:block; }
+
+        .hero-desc { margin-top:26px; font-size:15px; line-height:1.7; color:var(--gray3); max-width:400px; }
+
+        .hero-ctas { margin-top:34px; display:flex; gap:16px; align-items:center; }
+
+        .btn-primary {
+            font-family:'Barlow Condensed',sans-serif; font-size:13px; font-weight:700;
+            letter-spacing:.2em; text-transform:uppercase; padding:13px 30px;
+            background:var(--blue-accent); color:var(--white); border:none; cursor:none;
+            clip-path:polygon(7px 0%,100% 0%,calc(100% - 7px) 100%,0% 100%);
+            transition:background .2s,transform .2s; text-decoration:none; display:inline-block;
+        }
+        .btn-primary:hover { background:var(--blue-bright); transform:translateY(-2px); }
+
+        .btn-ghost {
+            font-family:'Barlow Condensed',sans-serif; font-size:13px; font-weight:700;
+            letter-spacing:.2em; text-transform:uppercase; padding:12px 30px;
+            background:transparent; color:var(--white);
+            border:1px solid rgba(46,156,255,.3); cursor:none;
+            transition:border-color .2s,color .2s; text-decoration:none; display:inline-block;
+        }
+        .btn-ghost:hover { border-color:var(--blue-bright); color:var(--blue-bright); }
+
+        .hero-stats {
+            position:absolute; right:48px; bottom:72px; z-index:3;
+            display:flex; flex-direction:column; gap:22px; text-align:right;
+        }
+        .hero-stat-num {
+            font-family:'Barlow Condensed',sans-serif; font-weight:900;
+            font-size:40px; line-height:1; color:var(--yellow);
+        }
+        .hero-stat-label { font-size:11px; color:var(--gray2); letter-spacing:.15em; text-transform:uppercase; margin-top:3px; }
+
+        .scroll-hint {
+            position:absolute; bottom:72px; left:50%; transform:translateX(-50%);
+            z-index:3; display:flex; flex-direction:column; align-items:center; gap:8px;
+        }
+        .scroll-line {
+            width:1px; height:44px;
+            background:linear-gradient(to bottom,var(--blue-bright),transparent);
+            animation:scrollP 1.8s ease-in-out infinite;
+        }
+        @keyframes scrollP { 0%,100%{opacity:.3;} 50%{opacity:1;} }
+        .scroll-text {
+            font-family:'Share Tech Mono',monospace; font-size:9px;
+            letter-spacing:.3em; color:var(--gray2); text-transform:uppercase; writing-mode:vertical-lr;
+        }
+
+        /* TICKER */
+        .ticker { background:var(--blue-accent); padding:11px 0; overflow:hidden; position:relative; z-index:5; }
+        .ticker-inner { display:flex; gap:0; animation:ticker 22s linear infinite; width:max-content; }
+        @keyframes ticker { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
+        .ticker-item {
+            font-family:'Barlow Condensed',sans-serif; font-weight:700;
+            font-size:13px; letter-spacing:.22em; text-transform:uppercase;
+            white-space:nowrap; padding:0 36px; display:flex; align-items:center; gap:16px;
+        }
+        .ticker-item::after { content:'●'; font-size:6px; opacity:.5; }
+
+        /* SECTIONS */
+        section { padding:90px 48px; }
+        .section-label {
+            font-family:'Share Tech Mono',monospace; font-size:11px;
+            color:var(--blue-bright); letter-spacing:.35em; text-transform:uppercase;
+            display:flex; align-items:center; gap:12px; margin-bottom:14px;
+        }
+        .section-label::before { content:''; width:28px; height:1px; background:var(--blue-bright); }
+        .section-title {
+            font-family:'Barlow Condensed',sans-serif; font-weight:900; font-style:italic;
+            font-size:clamp(40px,4.8vw,68px); text-transform:uppercase;
+            line-height:.95; letter-spacing:-.01em; margin-bottom:52px;
+        }
+
+        /* NEWS */
+        .news-section { background:var(--blue-dark); }
+        .news-grid { display:grid; grid-template-columns:2fr 1fr 1fr; gap:2px; }
+        .news-card {
+            background:var(--blue-mid); position:relative; overflow:hidden;
+            cursor:none; transition:transform .3s;
+        }
+        .news-card:hover { transform:scale(1.01); z-index:2; }
+        .news-card-main { grid-row:1/3; }
+        .news-img { width:100%; height:100%; min-height:240px; background:var(--blue-3); position:relative; overflow:hidden; }
+        .news-card-main .news-img { min-height:500px; }
+        .img-placeholder {
+            width:100%; height:100%; position:absolute; inset:0;
+            display:flex; align-items:center; justify-content:center;
+            font-family:'Barlow Condensed',sans-serif; font-size:11px;
+            color:var(--gray2); letter-spacing:.2em; flex-direction:column; gap:8px;
+        }
+        .news-overlay {
+            position:absolute; bottom:0; left:0; right:0; padding:22px;
+            background:linear-gradient(to top,rgba(5,12,26,.97),transparent);
+        }
+        .news-tag { font-family:'Share Tech Mono',monospace; font-size:10px; color:var(--blue-bright); letter-spacing:.3em; text-transform:uppercase; margin-bottom:7px; }
+        .news-headline { font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:19px; line-height:1.2; text-transform:uppercase; }
+        .news-card-main .news-headline { font-size:27px; }
+        .news-date { font-size:11px; color:var(--gray2); margin-top:7px; letter-spacing:.1em; }
+
+        /* SCHEDULE */
+        .schedule-section { background:var(--blue-mid); }
+        .schedule-filter { display:flex; gap:8px; margin-bottom:38px; flex-wrap:wrap; }
+        .filter-btn {
+            font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:12px;
+            letter-spacing:.2em; text-transform:uppercase; padding:10px 22px;
+            background:transparent; color:var(--gray2);
+            border:1px solid var(--gray); cursor:none; transition:all .2s;
+        }
+        .filter-btn.active { background:var(--blue-accent); color:var(--white); border-color:var(--blue-accent); }
+        .filter-btn:hover:not(.active) { border-color:var(--blue-bright); color:var(--white); }
+
+        .schedule-list { display:flex; flex-direction:column; gap:2px; }
+        .race-row {
+            display:grid; grid-template-columns:70px 60px 1fr auto auto 160px;
+            align-items:center; gap:20px; padding:18px 24px;
+            background:var(--blue-3); border-left:3px solid transparent;
+            transition:all .2s; cursor:none; position:relative; overflow:hidden;
+        }
+        .race-row::before {
+            content:''; position:absolute; inset:0;
+            background:linear-gradient(to right,rgba(46,156,255,.04),transparent);
+            opacity:0; transition:opacity .2s;
+        }
+        .race-row:hover { border-left-color:var(--blue-bright); }
+        .race-row:hover::before { opacity:1; }
+        .race-row.next { border-left-color:var(--yellow); background:rgba(255,209,102,.05); }
+        .race-row.done { opacity:.45; }
+
+        .race-num { font-family:'Share Tech Mono',monospace; font-size:12px; color:var(--gray2); }
+        .race-series-badge {
+            font-family:'Barlow Condensed',sans-serif; font-weight:900;
+            font-size:11px; letter-spacing:.1em; padding:4px 8px; text-transform:uppercase;
+        }
+        .badge-wec { background:rgba(255,209,102,.12); color:var(--yellow); }
+        .badge-imsa { background:rgba(46,156,255,.15); color:var(--blue-bright); }
+        .race-name { font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:18px; text-transform:uppercase; letter-spacing:.05em; }
+        .race-circuit { font-size:12px; color:var(--gray2); margin-top:2px; }
+        .race-date { font-family:'Share Tech Mono',monospace; font-size:13px; color:var(--white); white-space:nowrap; }
+        .race-duration { font-size:12px; color:var(--gray2); white-space:nowrap; }
+        .race-status { font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:12px; letter-spacing:.2em; text-transform:uppercase; text-align:right; }
+        .status-upcoming { color:var(--gray2); }
+        .status-next { color:var(--yellow); }
+        .status-done { color:rgba(255,255,255,.2); }
+        .status-main { color:var(--yellow); }
+
+        /* TEAMS */
+        .teams-section { background:var(--blue-dark); }
+        .teams-tabs { display:flex; gap:0; margin-bottom:44px; border-bottom:1px solid var(--gray); }
+        .tab-btn {
+            font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:14px;
+            letter-spacing:.18em; text-transform:uppercase; padding:14px 28px;
+            background:none; color:var(--gray2); border:none;
+            border-bottom:3px solid transparent; margin-bottom:-1px;
+            cursor:none; transition:all .2s;
+        }
+        .tab-btn.active { color:var(--white); border-bottom-color:var(--blue-bright); }
+
+        .teams-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:2px; }
+        .team-card {
+            background:var(--blue-mid); padding:28px; position:relative; overflow:hidden;
+            cursor:none; transition:transform .2s;
+        }
+        .team-card:hover { transform:translateY(-4px); }
+        .team-card::after {
+            content:''; position:absolute; bottom:0; left:0; right:0;
+            height:3px; background:var(--team-color,var(--blue-bright));
+        }
+        .team-number {
+            font-family:'Barlow Condensed',sans-serif; font-weight:900; font-style:italic;
+            font-size:72px; line-height:1; color:rgba(255,255,255,.05);
+            position:absolute; top:12px; right:20px;
+        }
+        .team-class { font-family:'Share Tech Mono',monospace; font-size:10px; letter-spacing:.3em; color:var(--team-color,var(--blue-bright)); text-transform:uppercase; margin-bottom:10px; }
+        .team-name { font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:20px; text-transform:uppercase; letter-spacing:.05em; margin-bottom:4px; }
+        .team-car { font-size:13px; color:var(--gray3); margin-bottom:20px; }
+        .team-drivers { display:flex; flex-direction:column; gap:6px; }
+        .driver-name { font-size:13px; display:flex; align-items:center; gap:10px; color:rgba(255,255,255,.8); }
+
+        /* RESULTS */
+        .results-section { background:var(--blue-mid); }
+        .results-podium { display:grid; grid-template-columns:1fr 1.2fr 1fr; gap:2px; margin-bottom:36px; align-items:end; }
+        .podium-card { padding:26px 22px; text-align:center; position:relative; overflow:hidden; }
+        .podium-1 { background:linear-gradient(to bottom,rgba(255,209,102,.1),var(--blue-3)); border-top:3px solid var(--yellow); }
+        .podium-2 { background:linear-gradient(to bottom,rgba(180,180,200,.07),var(--blue-3)); border-top:3px solid #8899aa; }
+        .podium-3 { background:linear-gradient(to bottom,rgba(180,120,60,.08),var(--blue-3)); border-top:3px solid #a07840; }
+        .podium-pos { font-family:'Barlow Condensed',sans-serif; font-weight:900; font-style:italic; font-size:76px; line-height:1; opacity:.1; position:absolute; top:8px; left:50%; transform:translateX(-50%); }
+        .podium-team { font-family:'Share Tech Mono',monospace; font-size:10px; color:var(--gray3); letter-spacing:.3em; text-transform:uppercase; margin-bottom:7px; position:relative; }
+        .podium-driver { font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:20px; text-transform:uppercase; position:relative; margin-bottom:4px; }
+        .podium-car { font-size:13px; color:var(--gray3); position:relative; }
+        .podium-laps { font-family:'Share Tech Mono',monospace; font-size:12px; margin-top:10px; position:relative; }
+        .podium-1 .podium-laps { color:var(--yellow); }
+        .podium-2 .podium-laps { color:#aabbcc; }
+        .podium-3 .podium-laps { color:#a07840; }
+
+        .results-table { width:100%; border-collapse:collapse; }
+        .results-table th { font-family:'Share Tech Mono',monospace; font-size:10px; letter-spacing:.3em; text-transform:uppercase; color:var(--gray2); text-align:left; padding:11px 14px; border-bottom:1px solid var(--gray); }
+        .results-table td { padding:13px 14px; border-bottom:1px solid rgba(255,255,255,.04); font-size:14px; }
+        .results-table tr:hover td { background:rgba(46,156,255,.03); }
+        .pos-num { font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:17px; color:var(--gray2); }
+        .car-num-badge { font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:15px; width:34px; height:34px; display:flex; align-items:center; justify-content:center; background:var(--gray); }
+        .driver-full { font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:16px; text-transform:uppercase; letter-spacing:.04em; }
+        .team-small { font-size:12px; color:var(--gray2); }
+        .gap-time { font-family:'Share Tech Mono',monospace; font-size:13px; color:var(--gray2); }
+
+        /* NEWS PAGE */
+        .news-page-grid {
+            display:grid; grid-template-columns:repeat(3,1fr); gap:2px;
+        }
+        .news-page-card {
+            background:var(--blue-mid); cursor:none; transition:transform .2s; position:relative; overflow:hidden;
+        }
+        .news-page-card:hover { transform:translateY(-4px); }
+        .news-page-img { height:200px; background:var(--blue-3); position:relative; }
+        .news-page-body { padding:20px; }
+        .news-page-tag { font-family:'Share Tech Mono',monospace; font-size:10px; color:var(--blue-bright); letter-spacing:.3em; text-transform:uppercase; margin-bottom:8px; }
+        .news-page-title { font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:20px; text-transform:uppercase; line-height:1.2; margin-bottom:10px; }
+        .news-page-excerpt { font-size:13px; color:var(--gray3); line-height:1.6; margin-bottom:12px; }
+        .news-page-date { font-size:11px; color:var(--gray2); letter-spacing:.1em; }
+
+        /* FOOTER */
+        footer {
+            background:var(--blue-dark); border-top:1px solid var(--gray);
+            padding:56px 48px 36px;
+        }
+        .footer-top { display:grid; grid-template-columns:1.5fr 1fr 1fr 1fr; gap:44px; margin-bottom:44px; }
+        .footer-logo { font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:26px; letter-spacing:.1em; text-transform:uppercase; margin-bottom:14px; }
+        .footer-about { font-size:13px; color:var(--gray2); line-height:1.7; }
+        .footer-col-title { font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:13px; letter-spacing:.2em; text-transform:uppercase; color:var(--gray2); margin-bottom:18px; }
+        .footer-links { list-style:none; display:flex; flex-direction:column; gap:9px; }
+        .footer-links a { font-size:14px; color:rgba(255,255,255,.55); text-decoration:none; transition:color .2s; cursor:none; }
+        .footer-links a:hover { color:var(--blue-bright); }
+        .footer-bottom { border-top:1px solid var(--gray); padding-top:24px; display:flex; justify-content:space-between; align-items:center; }
+        .footer-copy { font-size:12px; color:var(--gray2); letter-spacing:.1em; }
+        .footer-series { display:flex; gap:16px; align-items:center; }
+        .series-tag { font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:12px; letter-spacing:.18em; padding:5px 12px; text-transform:uppercase; }
+        .wec-tag { background:var(--yellow); color:var(--blue-dark); }
+        .imsa-tag { background:var(--blue-accent); color:var(--white); }
+    </style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- NAV -->
+<nav>
+    <div class="nav-logo">
+        <div class="dot"></div>
+        WECkbn
+    </div>
+    <ul class="nav-links">
+        <li><a href="#" class="nav-link active" data-page="home">Главная</a></li>
+        <li><a href="#" class="nav-link" data-page="news">Новости</a></li>
+        <li><a href="#" class="nav-link" data-page="schedule">Расписание</a></li>
+        <li><a href="#" class="nav-link" data-page="teams">Команды</a></li>
+        <li><a href="#" class="nav-link" data-page="results">Результаты</a></li>
+    </ul>
+</nav>
+
+<!-- ========== HOME ========== -->
+<div class="page active" id="page-home">
+
+    <section class="hero">
+        <div class="hero-bg"></div>
+        <div class="speed-lines">
+            <div class="speed-line" style="top:22%;width:58%;left:22%;animation-delay:0s;"></div>
+            <div class="speed-line" style="top:38%;width:38%;left:38%;animation-delay:1s;opacity:.25;"></div>
+            <div class="speed-line" style="top:58%;width:66%;left:12%;animation-delay:1.9s;"></div>
+            <div class="speed-line" style="top:72%;width:44%;left:28%;animation-delay:2.8s;opacity:.5;"></div>
+        </div>
+
+        <!-- Proper hypercar LMH/LMDh SVG -->
+        <div class="car-silhouette">
+            <svg class="car-svg" viewBox="0 0 1000 360" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="bodyGrad" x1="0" y1="0" x2="1000" y2="0" gradientUnits="userSpaceOnUse">
+                        <stop offset="0%" stop-color="#0A1628"/>
+                        <stop offset="30%" stop-color="#1A3A6A"/>
+                        <stop offset="70%" stop-color="#2E6FBF" stop-opacity=".7"/>
+                        <stop offset="100%" stop-color="#1A6FBF" stop-opacity=".4"/>
+                    </linearGradient>
+                    <linearGradient id="topGrad" x1="0" y1="0" x2="1000" y2="0" gradientUnits="userSpaceOnUse">
+                        <stop offset="0%" stop-color="#0F2040"/>
+                        <stop offset="50%" stop-color="#163058"/>
+                        <stop offset="100%" stop-color="#1A4080"/>
+                    </linearGradient>
+                    <filter id="glowBlue">
+                        <feGaussianBlur stdDeviation="5" result="b"/>
+                        <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+                    </filter>
+                    <filter id="glowStrong">
+                        <feGaussianBlur stdDeviation="12" result="b"/>
+                        <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+                    </filter>
+                </defs>
+
+                <!-- Ground glow -->
+                <ellipse cx="500" cy="342" rx="460" ry="18" fill="rgba(46,156,255,.12)"/>
+
+                <!-- === MAIN UNDERTRAY / FLAT FLOOR === -->
+                <path d="M95 280 L930 280 L930 295 L95 295 Z" fill="#0A1628" opacity=".8"/>
+
+                <!-- === REAR DIFFUSER (stepped/detailed) === -->
+                <path d="M820 280 L820 295 L890 285 L900 270 L870 265 Z" fill="#0F2040" stroke="rgba(46,156,255,.25)" stroke-width=".8"/>
+                <path d="M830 270 L860 265 L860 275 L830 278 Z" fill="rgba(46,156,255,.1)"/>
+                <path d="M840 268 L855 265 L855 271 L840 273 Z" fill="rgba(46,156,255,.08)"/>
+
+                <!-- === FRONT SPLITTER === -->
+                <path d="M80 282 L95 275 L95 295 L75 295 Z" fill="#1A3A6A"/>
+                <path d="M50 285 L80 282 L80 295 L50 292 Z" fill="#0F2040" stroke="rgba(46,156,255,.3)" stroke-width=".8"/>
+                <!-- Splitter winglets -->
+                <path d="M52 282 L65 278 L68 285 L55 287 Z" fill="rgba(46,156,255,.2)"/>
+                <path d="M55 275 L75 271 L77 280 L57 283 Z" fill="rgba(46,156,255,.15)"/>
+
+                <!-- === SIDE BODYWORK (complex LMH shape) === -->
+                <!-- Main side panel low -->
+                <path d="M95 280 L95 240 Q105 230 130 225 L800 225 Q830 228 860 240 L900 265 L900 280 Z"
+                      fill="url(#bodyGrad)" stroke="rgba(46,156,255,.2)" stroke-width=".8"/>
+
+                <!-- === COCKPIT + ROOF (bubble canopy style) === -->
+                <path d="M280 225 L310 155 Q340 110 390 90 L520 80 Q600 78 640 90 L680 115 L710 155 L730 195 L740 225 Z"
+                      fill="url(#topGrad)" stroke="rgba(46,156,255,.35)" stroke-width="1.2" filter="url(#glowBlue)"/>
+
+                <!-- Windscreen -->
+                <path d="M300 223 L328 158 Q355 116 398 98 L518 88 Q598 86 634 97 L668 118 L696 156 L714 193 L724 223 Z"
+                      fill="none" stroke="rgba(100,200,255,.2)" stroke-width="1.5"/>
+                <!-- Glass tint -->
+                <path d="M320 218 L342 162 Q365 122 402 105 L516 95 Q592 93 624 103 L654 122 L678 158 L694 192 L704 218 Z"
+                      fill="rgba(30,80,150,.3)"/>
+
+                <!-- Cockpit side fin / Airfoil -->
+                <path d="M295 220 L310 155 L330 155 L320 220 Z" fill="rgba(26,111,191,.4)" stroke="rgba(46,156,255,.2)" stroke-width=".6"/>
+                <path d="M710 220 L720 155 L740 155 L730 220 Z" fill="rgba(26,111,191,.4)" stroke="rgba(46,156,255,.2)" stroke-width=".6"/>
+
+                <!-- === UPPER BODYWORK FLANKS === -->
+                <!-- Left fender -->
+                <path d="M95 280 L130 225 L200 215 L250 218 L280 225 L310 155 L295 220 L250 220 L195 220 L130 228 L100 268 Z"
+                      fill="#0F2040" stroke="rgba(46,156,255,.15)" stroke-width=".7"/>
+                <!-- Right fender -->
+                <path d="M900 280 L870 240 L820 222 L760 215 L730 218 L720 155 L740 225 L770 222 L830 224 L880 245 L910 270 Z"
+                      fill="#0F2040" stroke="rgba(46,156,255,.15)" stroke-width=".7"/>
+
+                <!-- === DOOR PANEL / SIDE VENT === -->
+                <rect x="400" y="220" width="220" height="58" rx="0" fill="#0A1628" opacity=".6"/>
+                <!-- NACA duct -->
+                <path d="M420 235 L460 230 L500 240 L460 248 Z" fill="rgba(46,156,255,.08)" stroke="rgba(46,156,255,.25)" stroke-width=".6"/>
+                <!-- Louvres -->
+                <line x1="440" y1="240" x2="490" y2="237" stroke="rgba(46,156,255,.3)" stroke-width=".7"/>
+                <line x1="438" y1="244" x2="492" y2="241" stroke="rgba(46,156,255,.2)" stroke-width=".5"/>
+                <line x1="436" y1="248" x2="490" y2="245" stroke="rgba(46,156,255,.15)" stroke-width=".5"/>
+
+                <!-- Car number panel -->
+                <rect x="540" y="228" width="65" height="44" rx="2" fill="rgba(255,255,255,.04)" stroke="rgba(255,255,255,.08)" stroke-width=".8"/>
+                <text x="573" y="257" text-anchor="middle" font-family="Barlow Condensed" font-size="20" font-weight="900" fill="white" opacity=".6">07</text>
+
+                <!-- === REAR WING (large T-wing + main plane) === -->
+                <!-- Main plane -->
+                <path d="M800 148 L900 142 L910 155 L800 162 Z" fill="#1A3A6A" stroke="rgba(46,156,255,.4)" stroke-width=".8"/>
+                <!-- Endplates -->
+                <rect x="895" y="142" width="14" height="60" rx="1" fill="#0F2040" stroke="rgba(46,156,255,.3)" stroke-width=".6"/>
+                <rect x="798" y="143" width="12" height="58" rx="1" fill="#0F2040" stroke="rgba(46,156,255,.3)" stroke-width=".6"/>
+                <!-- Upper T-wing -->
+                <path d="M820 138 L892 134 L895 140 L818 144 Z" fill="rgba(26,111,191,.6)" stroke="rgba(46,156,255,.3)" stroke-width=".5"/>
+                <!-- Swan neck struts -->
+                <line x1="840" y1="162" x2="845" y2="148" stroke="rgba(46,156,255,.3)" stroke-width=".8"/>
+                <line x1="870" y1="162" x2="865" y2="148" stroke="rgba(46,156,255,.3)" stroke-width=".8"/>
+                <!-- Rear wing glow -->
+                <path d="M800 148 L905 142" stroke="rgba(74,186,255,.25)" stroke-width="2" filter="url(#glowBlue)"/>
+
+                <!-- === FRONT FENDER / HOOD SCOOP === -->
+                <path d="M120 220 L180 210 L200 185 L230 175 L260 178 L285 195 L295 220 Z"
+                      fill="#0F2040" stroke="rgba(46,156,255,.2)" stroke-width=".8"/>
+                <!-- Hood spine / ridge -->
+                <path d="M210 182 L240 176 L258 180 L230 190 Z" fill="rgba(46,156,155,.12)" stroke="rgba(46,156,255,.2)" stroke-width=".5"/>
+
+                <!-- === FRONT LIGHTS === -->
+                <!-- LED strip running light -->
+                <path d="M96 255 L145 248" stroke="rgba(74,186,255,.9)" stroke-width="2.5" filter="url(#glowStrong)"/>
+                <path d="M96 255 L145 248" stroke="white" stroke-width="1" opacity=".8"/>
+                <!-- Daytime running arc -->
+                <path d="M105 265 Q120 258 140 255" stroke="rgba(74,186,255,.6)" stroke-width="1.5" fill="none" filter="url(#glowBlue)"/>
+                <!-- Headlight pod -->
+                <path d="M97 248 L128 244 L133 258 L100 262 Z" fill="#0A1628" stroke="rgba(74,186,255,.4)" stroke-width=".8"/>
+                <!-- Inner light -->
+                <ellipse cx="115" cy="253" rx="10" ry="6" fill="rgba(200,230,255,.12)"/>
+                <!-- Outer DRL -->
+                <path d="M135 248 L160 245 L163 252 L138 255 Z" fill="rgba(74,186,255,.15)" stroke="rgba(74,186,255,.4)" stroke-width=".5"/>
+
+                <!-- === REAR LIGHTS === -->
+                <path d="M876 248 L920 244 L920 255 L876 258 Z" fill="rgba(46,156,255,.12)" stroke="rgba(46,156,255,.5)" stroke-width=".8"/>
+                <!-- Brake light LED bar -->
+                <path d="M878 252 L918 248" stroke="rgba(46,156,255,.8)" stroke-width="2" filter="url(#glowBlue)"/>
+
+                <!-- === FRONT WHEEL (LMH wide tire) === -->
+                <circle cx="215" cy="295" r="58" fill="#080e18" stroke="rgba(46,156,255,.4)" stroke-width="1.5"/>
+                <circle cx="215" cy="295" r="42" fill="#060c16" stroke="rgba(46,156,255,.25)" stroke-width="1"/>
+                <!-- Rim spokes -->
+                <line x1="215" y1="253" x2="215" y2="337" stroke="rgba(46,156,255,.2)" stroke-width=".8"/>
+                <line x1="173" y1="271" x2="257" y2="319" stroke="rgba(46,156,255,.2)" stroke-width=".8"/>
+                <line x1="173" y1="319" x2="257" y2="271" stroke="rgba(46,156,255,.2)" stroke-width=".8"/>
+                <line x1="155" y1="295" x2="275" y2="295" stroke="rgba(46,156,255,.2)" stroke-width=".8"/>
+                <circle cx="215" cy="295" r="16" fill="#0A1628" stroke="rgba(46,156,255,.35)" stroke-width="1"/>
+                <circle cx="215" cy="295" r="7" fill="rgba(46,156,255,.4)"/>
+                <!-- Tire sidewall -->
+                <circle cx="215" cy="295" r="55" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="6"/>
+                <!-- Brake heat glow -->
+                <circle cx="215" cy="295" r="25" fill="none" stroke="rgba(46,156,255,.18)" stroke-width="14"/>
+
+                <!-- === REAR WHEEL === -->
+                <circle cx="750" cy="295" r="63" fill="#080e18" stroke="rgba(46,156,255,.4)" stroke-width="1.5"/>
+                <circle cx="750" cy="295" r="46" fill="#060c16" stroke="rgba(46,156,255,.25)" stroke-width="1"/>
+                <line x1="750" y1="249" x2="750" y2="341" stroke="rgba(46,156,255,.2)" stroke-width=".8"/>
+                <line x1="704" y1="268" x2="796" y2="322" stroke="rgba(46,156,255,.2)" stroke-width=".8"/>
+                <line x1="704" y1="322" x2="796" y2="268" stroke="rgba(46,156,255,.2)" stroke-width=".8"/>
+                <line x1="687" y1="295" x2="813" y2="295" stroke="rgba(46,156,255,.2)" stroke-width=".8"/>
+                <circle cx="750" cy="295" r="18" fill="#0A1628" stroke="rgba(46,156,255,.35)" stroke-width="1"/>
+                <circle cx="750" cy="295" r="8" fill="rgba(46,156,255,.4)"/>
+                <circle cx="750" cy="295" r="60" fill="none" stroke="rgba(255,255,255,.05)" stroke-width="6"/>
+                <circle cx="750" cy="295" r="28" fill="none" stroke="rgba(46,156,255,.15)" stroke-width="18"/>
+
+                <!-- === SUSPENSION DETAILS === -->
+                <!-- Front upper wishbone -->
+                <path d="M155 240 Q175 252 215 255" stroke="rgba(46,156,255,.25)" stroke-width=".8" fill="none"/>
+                <path d="M155 265 Q185 272 215 270" stroke="rgba(46,156,255,.2)" stroke-width=".6" fill="none"/>
+                <!-- Rear upper wishbone -->
+                <path d="M820 248 Q785 258 750 258" stroke="rgba(46,156,255,.25)" stroke-width=".8" fill="none"/>
+                <path d="M820 268 Q790 274 750 272" stroke="rgba(46,156,255,.2)" stroke-width=".6" fill="none"/>
+
+                <!-- === WEC CLASS STRIPE === -->
+                <path d="M310 225 L730 225" stroke="rgba(255,209,102,.4)" stroke-width="1.5"/>
+                <path d="M310 225 L730 225" stroke="rgba(255,209,102,.15)" stroke-width="4" filter="url(#glowBlue)"/>
+
+                <!-- Sponsor/branding strip on side -->
+                <rect x="350" y="248" width="180" height="18" rx="0" fill="rgba(255,209,102,.06)" stroke="rgba(255,209,102,.15)" stroke-width=".5"/>
+                <text x="440" y="261" text-anchor="middle" font-family="Barlow Condensed" font-size="9" font-weight="700" fill="rgba(255,209,102,.5)" letter-spacing="3">WECkbn</text>
+
+            </svg>
+        </div>
+
+        <div class="hero-content">
+            <div class="hero-badge">// Сезон 2026</div>
+            <h1 class="hero-title">
+                <span>ENDURANCE</span>
+                <span class="line-outline">RACING</span>
+                <span class="line-yellow">WECkbn</span>
+            </h1>
+            <p class="hero-desc">Всё о мировом чемпионате WEC и серии IMSA WeatherTech — результаты, расписание, команды и главные события сезона 2026.</p>
+            <div class="hero-ctas">
+                <a href="#" class="btn-primary nav-link" data-page="schedule">Расписание 2026</a>
+                <a href="#" class="btn-ghost nav-link" data-page="results">Результаты</a>
+            </div>
+        </div>
+
+        <div class="hero-stats">
+            <div>
+                <div class="hero-stat-num">8</div>
+                <div class="hero-stat-label">Этапов WEC</div>
+            </div>
+            <div>
+                <div class="hero-stat-num">36</div>
+                <div class="hero-stat-label">Команды</div>
+            </div>
+            <div>
+                <div class="hero-stat-num">5</div>
+                <div class="hero-stat-label">Континентов</div>
+            </div>
+        </div>
+
+        <div class="scroll-hint">
+            <div class="scroll-line"></div>
+            <div class="scroll-text">Scroll</div>
+        </div>
+    </section>
+
+    <!-- TICKER -->
+    <div class="ticker">
+        <div class="ticker-inner">
+            <div class="ticker-item">WEC 2026 — Открытие сезона в Имоле 19 апреля</div>
+            <div class="ticker-item">Toyota TR010 Hybrid — новый облик для 2026 года</div>
+            <div class="ticker-item">Genesis GMR-001 — дебют в WEC · Ле-Ман 13-14 июня 2026</div>
+            <div class="ticker-item">Lamborghini приостанавливает SC63 — пауза в 2026</div>
+            <div class="ticker-item">IMSA — Daytona 24H 2026: Porsche защищает титул GTP</div>
+            <div class="ticker-item">WEC 2026 — Открытие сезона в Имоле 19 апреля</div>
+            <div class="ticker-item">Toyota TR010 Hybrid — новый облик для 2026 года</div>
+            <div class="ticker-item">Genesis GMR-001 — дебют в WEC · Ле-Ман 13-14 июня 2026</div>
+            <div class="ticker-item">Lamborghini приостанавливает SC63 — пауза в 2026</div>
+            <div class="ticker-item">IMSA — Daytona 24H 2026: Porsche защищает титул GTP</div>
+        </div>
+    </div>
+
+    <!-- LATEST NEWS (preview on home) -->
+    <section class="news-section">
+        <div class="section-label">// Последние новости</div>
+        <h2 class="section-title">ГОРЯЧЕЕ<br>С ТРАСС</h2>
+        <div class="news-grid">
+            <div class="news-card news-card-main">
+                <div class="news-img" style="background:linear-gradient(135deg,#050c1a,#0f2040,#0a1628);">
+                    <div class="img-placeholder">
+                        <svg width="44" height="44" viewBox="0 0 44 44" fill="none"><circle cx="22" cy="22" r="18" stroke="rgba(46,156,255,.3)" stroke-width="1"/><path d="M14 30 L22 14 L30 30" stroke="rgba(46,156,255,.5)" stroke-width="1.5" fill="none"/></svg>
+                        <span>Главное фото</span>
+                    </div>
+                </div>
+                <div class="news-overlay">
+                    <div class="news-tag">// WEC · Имола 2026</div>
+                    <div class="news-headline">Toyota TR010 Hybrid — полностью переработанный фронт для старта сезона в Имоле</div>
+                    <div class="news-date">7 января 2026</div>
+                </div>
+            </div>
+            <div class="news-card">
+                <div class="news-img" style="background:linear-gradient(135deg,#050c1a,#10182a);">
+                    <div class="img-placeholder"><span style="font-size:22px">🏎</span><span>Фото</span></div>
+                </div>
+                <div class="news-overlay">
+                    <div class="news-tag">// IMSA · Daytona</div>
+                    <div class="news-headline">Porsche #6 побеждает на 24h Daytona</div>
+                    <div class="news-date">26 января 2026</div>
+                </div>
+            </div>
+            <div class="news-card">
+                <div class="news-img" style="background:linear-gradient(135deg,#060f1a,#0a1828);">
+                    <div class="img-placeholder"><span style="font-size:22px">🔧</span><span>Фото</span></div>
+                </div>
+                <div class="news-overlay">
+                    <div class="news-tag">// Техника</div>
+                    <div class="news-headline">Genesis GMR-001 замечен на тестах в Имоле</div>
+                    <div class="news-date">10 марта 2026</div>
+                </div>
+            </div>
+            <div class="news-card">
+                <div class="news-img" style="background:linear-gradient(135deg,#050c20,#0a1530);">
+                    <div class="img-placeholder"><span style="font-size:22px">📰</span><span>Фото</span></div>
+                </div>
+                <div class="news-overlay">
+                    <div class="news-tag">// WEC</div>
+                    <div class="news-headline">Катар перенесён на октябрь — Имола открывает сезон</div>
+                    <div class="news-date">15 марта 2026</div>
+                </div>
+            </div>
+        </div>
+        <div style="margin-top:24px;text-align:center;">
+            <a href="#" class="btn-ghost nav-link" data-page="news">Все новости →</a>
+        </div>
+    </section>
+
+</div><!-- end home -->
+
+<!-- ========== NEWS PAGE ========== -->
+<div class="page" id="page-news">
+    <div style="padding-top:90px;"></div>
+    <div class="ticker">
+        <div class="ticker-inner">
+            <div class="ticker-item">WEC 2026 — Сезон стартует в Имоле 19 апреля</div>
+            <div class="ticker-item">Porsche побеждает на 24h Daytona 2026</div>
+            <div class="ticker-item">Toyota TR010 Hybrid — дебют нового облика</div>
+            <div class="ticker-item">WEC 2026 — Сезон стартует в Имоле 19 апреля</div>
+            <div class="ticker-item">Porsche побеждает на 24h Daytona 2026</div>
+            <div class="ticker-item">Toyota TR010 Hybrid — дебют нового облика</div>
+        </div>
+    </div>
+    <section style="background:var(--blue-dark)">
+        <div class="section-label">// Все материалы</div>
+        <h2 class="section-title">НОВОСТИ<br>WECkbn</h2>
+        <div class="news-page-grid">
+            <div class="news-page-card">
+                <div class="news-page-img" style="background:linear-gradient(135deg,#050c1a,#0f2040);">
+                    <div class="img-placeholder"><span style="font-size:28px">🚗</span></div>
+                </div>
+                <div class="news-page-body">
+                    <div class="news-page-tag">// WEC · 7 янв 2026</div>
+                    <div class="news-page-title">Toyota TR010 Hybrid: новый фронт для 2026</div>
+                    <div class="news-page-excerpt">Toyota полностью переработала переднюю часть своего гиперкара, приблизив стиль к дорожным моделям бренда.</div>
+                    <div class="news-page-date">7 января 2026</div>
+                </div>
+            </div>
+            <div class="news-page-card">
+                <div class="news-page-img" style="background:linear-gradient(135deg,#080c18,#10182a);">
+                    <div class="img-placeholder"><span style="font-size:28px">🏆</span></div>
+                </div>
+                <div class="news-page-body">
+                    <div class="news-page-tag">// IMSA · 26 янв 2026</div>
+                    <div class="news-page-title">Porsche #6 — победитель 24h Daytona 2026</div>
+                    <div class="news-page-excerpt">Porsche Penske Motorsport открыл сезон IMSA триумфом на легендарном овале Daytona.</div>
+                    <div class="news-page-date">26 января 2026</div>
+                </div>
+            </div>
+            <div class="news-page-card">
+                <div class="news-page-img" style="background:linear-gradient(135deg,#060c1c,#0c1830);">
+                    <div class="img-placeholder"><span style="font-size:28px">🆕</span></div>
+                </div>
+                <div class="news-page-body">
+                    <div class="news-page-tag">// WEC · 10 мар 2026</div>
+                    <div class="news-page-title">Genesis GMR-001 замечен на тестах в Имоле</div>
+                    <div class="news-page-excerpt">Корейский дебютант провёл тестовый день на Autodromo Enzo e Dino Ferrari перед стартом сезона WEC.</div>
+                    <div class="news-page-date">10 марта 2026</div>
+                </div>
+            </div>
+            <div class="news-page-card">
+                <div class="news-page-img" style="background:linear-gradient(135deg,#050a16,#0a1628);">
+                    <div class="img-placeholder"><span style="font-size:28px">📅</span></div>
+                </div>
+                <div class="news-page-body">
+                    <div class="news-page-tag">// WEC · 15 мар 2026</div>
+                    <div class="news-page-title">Катар перенесён — Имола открывает WEC 2026</div>
+                    <div class="news-page-excerpt">В связи с геополитической обстановкой Qatar 1812km перенесён на октябрь. Открытие сезона — 6 Hours of Imola 19 апреля.</div>
+                    <div class="news-page-date">15 марта 2026</div>
+                </div>
+            </div>
+            <div class="news-page-card">
+                <div class="news-page-img" style="background:linear-gradient(135deg,#060c1a,#101c30);">
+                    <div class="img-placeholder"><span style="font-size:28px">🔧</span></div>
+                </div>
+                <div class="news-page-body">
+                    <div class="news-page-tag">// Техника · 25 дек 2025</div>
+                    <div class="news-page-title">Cadillac V-Series.R — самое радикальное обновление 2026</div>
+                    <div class="news-page-excerpt">Cadillac переработал аэродинамику, добавив новый сплиттер и перепроектировав заднее антикрыло.</div>
+                    <div class="news-page-date">25 декабря 2025</div>
+                </div>
+            </div>
+            <div class="news-page-card">
+                <div class="news-page-img" style="background:linear-gradient(135deg,#070c18,#0e1a2c);">
+                    <div class="img-placeholder"><span style="font-size:28px">🏁</span></div>
+                </div>
+                <div class="news-page-body">
+                    <div class="news-page-tag">// IMSA · 20 мар 2026</div>
+                    <div class="news-page-title">12h Sebring 2026: анонс стартовой решётки</div>
+                    <div class="news-page-excerpt">IMSA официально объявила составы команд для 12-часовой гонки в Себринге — второго этапа сезона.</div>
+                    <div class="news-page-date">20 марта 2026</div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- ========== SCHEDULE PAGE ========== -->
+<div class="page" id="page-schedule">
+    <div style="padding-top:90px;"></div>
+    <section class="schedule-section">
+        <div class="section-label">// Сезон 2026</div>
+        <h2 class="section-title">РАСПИСАНИЕ<br>ЭТАПОВ</h2>
+
+        <div class="schedule-filter">
+            <button class="filter-btn active" data-filter="all">Все этапы</button>
+            <button class="filter-btn" data-filter="wec">WEC</button>
+            <button class="filter-btn" data-filter="imsa">IMSA</button>
+        </div>
+
+        <div class="schedule-list" id="raceList">
+            <!-- WEC rounds (actual 2026 calendar) -->
+            <div class="race-row next" data-series="wec">
+                <div class="race-num">01</div>
+                <div class="race-series-badge badge-wec">WEC</div>
+                <div>
+                    <div class="race-name">6 Hours of Imola</div>
+                    <div class="race-circuit">Autodromo Enzo e Dino Ferrari · Италия</div>
+                </div>
+                <div class="race-date">19 Apr 2026</div>
+                <div class="race-duration">6 ч</div>
+                <div class="race-status status-next">► Следующая</div>
+            </div>
+
+            <div class="race-row" data-series="wec">
+                <div class="race-num">02</div>
+                <div class="race-series-badge badge-wec">WEC</div>
+                <div>
+                    <div class="race-name">6 Hours of Spa-Francorchamps</div>
+                    <div class="race-circuit">Circuit de Spa-Francorchamps · Бельгия</div>
+                </div>
+                <div class="race-date">9 May 2026</div>
+                <div class="race-duration">6 ч</div>
+                <div class="race-status status-upcoming">Скоро</div>
+            </div>
+
+            <div class="race-row" data-series="wec">
+                <div class="race-num">03</div>
+                <div class="race-series-badge badge-wec">WEC</div>
+                <div>
+                    <div class="race-name">24 Hours of Le Mans</div>
+                    <div class="race-circuit">Circuit de la Sarthe · Ле-Ман, Франция</div>
+                </div>
+                <div class="race-date">13–14 Jun 2026</div>
+                <div class="race-duration">24 ч</div>
+                <div class="race-status status-main">★ Главная гонка</div>
+            </div>
+
+            <div class="race-row" data-series="wec">
+                <div class="race-num">04</div>
+                <div class="race-series-badge badge-wec">WEC</div>
+                <div>
+                    <div class="race-name">ROLEX 6 Hours of São Paulo</div>
+                    <div class="race-circuit">Autódromo José Carlos Pace · Бразилия</div>
+                </div>
+                <div class="race-date">12 Jul 2026</div>
+                <div class="race-duration">6 ч</div>
+                <div class="race-status status-upcoming">Скоро</div>
+            </div>
+
+            <div class="race-row" data-series="wec">
+                <div class="race-num">05</div>
+                <div class="race-series-badge badge-wec">WEC</div>
+                <div>
+                    <div class="race-name">Lone Star Le Mans</div>
+                    <div class="race-circuit">Circuit of The Americas · Остин, США</div>
+                </div>
+                <div class="race-date">6 Sep 2026</div>
+                <div class="race-duration">6 ч</div>
+                <div class="race-status status-upcoming">Скоро</div>
+            </div>
+
+            <div class="race-row" data-series="wec">
+                <div class="race-num">06</div>
+                <div class="race-series-badge badge-wec">WEC</div>
+                <div>
+                    <div class="race-name">6 Hours of Fuji</div>
+                    <div class="race-circuit">Fuji Speedway · Япония</div>
+                </div>
+                <div class="race-date">27 Sep 2026</div>
+                <div class="race-duration">6 ч</div>
+                <div class="race-status status-upcoming">Скоро</div>
+            </div>
+
+            <div class="race-row" data-series="wec">
+                <div class="race-num">07</div>
+                <div class="race-series-badge badge-wec">WEC</div>
+                <div>
+                    <div class="race-name">Qatar 1812 km</div>
+                    <div class="race-circuit">Lusail International Circuit · Катар</div>
+                </div>
+                <div class="race-date">24 Oct 2026</div>
+                <div class="race-duration">1812 км</div>
+                <div class="race-status status-upcoming">Скоро</div>
+            </div>
+
+            <div class="race-row" data-series="wec">
+                <div class="race-num">08</div>
+                <div class="race-series-badge badge-wec">WEC</div>
+                <div>
+                    <div class="race-name">8 Hours of Bahrain</div>
+                    <div class="race-circuit">Bahrain International Circuit · Бахрейн</div>
+                </div>
+                <div class="race-date">7 Nov 2026</div>
+                <div class="race-duration">8 ч</div>
+                <div class="race-status status-upcoming">Скоро</div>
+            </div>
+
+            <!-- IMSA -->
+            <div class="race-row done" data-series="imsa">
+                <div class="race-num">I·01</div>
+                <div class="race-series-badge badge-imsa">IMSA</div>
+                <div>
+                    <div class="race-name">Rolex 24 At Daytona</div>
+                    <div class="race-circuit">Daytona International Speedway · США</div>
+                </div>
+                <div class="race-date">25 Jan 2026</div>
+                <div class="race-duration">24 ч</div>
+                <div class="race-status status-done">Завершена</div>
+            </div>
+
+            <div class="race-row" data-series="imsa">
+                <div class="race-num">I·02</div>
+                <div class="race-series-badge badge-imsa">IMSA</div>
+                <div>
+                    <div class="race-name">12 Hours of Sebring</div>
+                    <div class="race-circuit">Sebring International Raceway · США</div>
+                </div>
+                <div class="race-date">21 Mar 2026</div>
+                <div class="race-duration">12 ч</div>
+                <div class="race-status status-upcoming">Скоро</div>
+            </div>
+
+        </div>
+    </section>
+</div>
+
+<!-- ========== TEAMS PAGE ========== -->
+<div class="page" id="page-teams">
+    <div style="padding-top:90px;"></div>
+    <section class="teams-section">
+        <div class="section-label">// Участники 2026</div>
+        <h2 class="section-title">КОМАНДЫ<br>И МАШИНЫ</h2>
+
+        <div class="teams-tabs">
+            <button class="tab-btn active" data-tab="hypercar">Hypercar / GTP</button>
+            <button class="tab-btn" data-tab="lmgt3">LMGT3 / GTD</button>
+        </div>
+
+        <div class="teams-grid" id="teamsGrid">
+            <div class="team-card" style="--team-color:#CC0000;" data-class="hypercar">
+                <div class="team-number">50</div>
+                <div class="team-class">Hypercar · WEC</div>
+                <div class="team-name">Ferrari AF Corse</div>
+                <div class="team-car">Ferrari 499P</div>
+                <div class="team-drivers">
+                    <div class="driver-name"><span>🇮🇹</span> Antonio Fuoco</div>
+                    <div class="driver-name"><span>🇩🇰</span> Nicklas Nielsen</div>
+                    <div class="driver-name"><span>🇩🇪</span> Miguel Molina</div>
+                </div>
+            </div>
+            <div class="team-card" style="--team-color:#EB0A1E;" data-class="hypercar">
+                <div class="team-number">7</div>
+                <div class="team-class">Hypercar · WEC</div>
+                <div class="team-name">Toyota Racing</div>
+                <div class="team-car">Toyota TR010 Hybrid</div>
+                <div class="team-drivers">
+                    <div class="driver-name"><span>🇳🇿</span> Brendon Hartley</div>
+                    <div class="driver-name"><span>🇯🇵</span> Ryō Hirakawa</div>
+                    <div class="driver-name"><span>🇨🇭</span> Sébastien Buemi</div>
+                </div>
+            </div>
+            <div class="team-card" style="--team-color:#E6002D;" data-class="hypercar">
+                <div class="team-number">5</div>
+                <div class="team-class">GTP · IMSA</div>
+                <div class="team-name">Porsche Penske Motorsport</div>
+                <div class="team-car">Porsche 963</div>
+                <div class="team-drivers">
+                    <div class="driver-name"><span>🇩🇪</span> Kevin Estre</div>
+                    <div class="driver-name"><span>🇫🇷</span> Mathieu Jaminet</div>
+                    <div class="driver-name"><span>🇧🇪</span> Laurens Vanthoor</div>
+                </div>
+            </div>
+            <div class="team-card" style="--team-color:#0066B1;" data-class="hypercar">
+                <div class="team-number">2</div>
+                <div class="team-class">GTP · IMSA / Hypercar · WEC</div>
+                <div class="team-name">Cadillac Racing</div>
+                <div class="team-car">Cadillac V-Series.R</div>
+                <div class="team-drivers">
+                    <div class="driver-name"><span>🇺🇸</span> Earl Bamber</div>
+                    <div class="driver-name"><span>🇬🇧</span> Alex Lynn</div>
+                    <div class="driver-name"><span>🇬🇧</span> Richard Westbrook</div>
+                </div>
+            </div>
+            <div class="team-card" style="--team-color:#004A97;" data-class="hypercar">
+                <div class="team-number">93</div>
+                <div class="team-class">Hypercar · WEC</div>
+                <div class="team-name">Peugeot TotalEnergies</div>
+                <div class="team-car">Peugeot 9X8</div>
+                <div class="team-drivers">
+                    <div class="driver-name"><span>🇬🇧</span> Paul di Resta</div>
+                    <div class="driver-name"><span>🇫🇷</span> Stoffel Vandoorne</div>
+                    <div class="driver-name"><span>🇨🇳</span> Ho-Pin Tung</div>
+                </div>
+            </div>
+            <div class="team-card" style="--team-color:#5A8A00;" data-class="hypercar">
+                <div class="team-number">17</div>
+                <div class="team-class">Hypercar · WEC — Дебют</div>
+                <div class="team-name">Genesis Magma Racing</div>
+                <div class="team-car">Genesis GMR-001</div>
+                <div class="team-drivers">
+                    <div class="driver-name"><span>🇧🇷</span> Pipo Derani</div>
+                    <div class="driver-name"><span>🇩🇪</span> André Lotterer</div>
+                    <div class="driver-name"><span>🇫🇷</span> Mathys Jaubert</div>
+                </div>
+            </div>
+            <div class="team-card" style="--team-color:#1E90D0;" data-class="lmgt3" style="display:none">
+                <div class="team-number">55</div>
+                <div class="team-class">LMGT3 · WEC</div>
+                <div class="team-name">BMW M Team RLL</div>
+                <div class="team-car">BMW M4 GT3</div>
+                <div class="team-drivers">
+                    <div class="driver-name"><span>🇩🇪</span> Marco Wittmann</div>
+                    <div class="driver-name"><span>🇦🇺</span> Sheldon van der Linde</div>
+                </div>
+            </div>
+            <div class="team-card" style="--team-color:#AF9500;" data-class="lmgt3">
+                <div class="team-number">92</div>
+                <div class="team-class">LMGT3 · WEC</div>
+                <div class="team-name">Porsche GT Team</div>
+                <div class="team-car">Porsche 911 GT3 R</div>
+                <div class="team-drivers">
+                    <div class="driver-name"><span>🇩🇪</span> Neel Jani</div>
+                    <div class="driver-name"><span>🇦🇹</span> Michael Christensen</div>
+                </div>
+            </div>
+            <div class="team-card" style="--team-color:#CC2222;" data-class="lmgt3">
+                <div class="team-number">21</div>
+                <div class="team-class">GTD · IMSA</div>
+                <div class="team-name">Ferrari of San Francisco</div>
+                <div class="team-car">Ferrari 296 GT3</div>
+                <div class="team-drivers">
+                    <div class="driver-name"><span>🇺🇸</span> Daniel Serra</div>
+                    <div class="driver-name"><span>🇧🇷</span> Luis Felipe Derani</div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- ========== RESULTS PAGE ========== -->
+<div class="page" id="page-results">
+    <div style="padding-top:90px;"></div>
+    <section class="results-section">
+        <div class="section-label">// 24h Daytona · IMSA · 25 Jan 2026</div>
+        <h2 class="section-title">ПОСЛЕДНИЕ<br>РЕЗУЛЬТАТЫ</h2>
+
+        <div class="results-podium">
+            <div class="podium-card podium-2">
+                <div class="podium-pos">2</div>
+                <div class="podium-team">Cadillac Racing #31</div>
+                <div class="podium-driver">Bamber / Lynn / Westbrook</div>
+                <div class="podium-car">Cadillac V-Series.R</div>
+                <div class="podium-laps">+1 LAP</div>
+            </div>
+            <div class="podium-card podium-1">
+                <div class="podium-pos">1</div>
+                <div class="podium-team">Porsche Penske #6</div>
+                <div class="podium-driver">Estre / Lotterer / Vanthoor</div>
+                <div class="podium-car">Porsche 963</div>
+                <div class="podium-laps">765 кругов · Победа</div>
+            </div>
+            <div class="podium-card podium-3">
+                <div class="podium-pos">3</div>
+                <div class="podium-team">BMW M Team RLL #25</div>
+                <div class="podium-driver">Farfus / Yelloly / Eng</div>
+                <div class="podium-car">BMW M Hybrid V8</div>
+                <div class="podium-laps">+3 LAPS</div>
+            </div>
+        </div>
+
+        <table class="results-table">
+            <thead>
+            <tr>
+                <th>Поз</th><th>#</th><th>Экипаж</th><th>Машина</th><th>Круги</th><th>Отставание</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td><span class="pos-num" style="color:var(--yellow)">1</span></td>
+                <td><div class="car-num-badge" style="background:#CC0000;">6</div></td>
+                <td><div class="driver-full">Estre / Lotterer / Vanthoor</div><div class="team-small">Porsche Penske Motorsport</div></td>
+                <td><span class="team-small">Porsche 963</span></td>
+                <td><span class="gap-time">765</span></td>
+                <td><span class="gap-time" style="color:var(--yellow)">Победитель</span></td>
+            </tr>
+            <tr>
+                <td><span class="pos-num">2</span></td>
+                <td><div class="car-num-badge" style="background:#0066B1;">31</div></td>
+                <td><div class="driver-full">Bamber / Lynn / Westbrook</div><div class="team-small">Cadillac Racing</div></td>
+                <td><span class="team-small">Cadillac V-Series.R</span></td>
+                <td><span class="gap-time">764</span></td>
+                <td><span class="gap-time">+1 LAP</span></td>
+            </tr>
+            <tr>
+                <td><span class="pos-num">3</span></td>
+                <td><div class="car-num-badge" style="background:#1E90D0;">25</div></td>
+                <td><div class="driver-full">Farfus / Yelloly / Eng</div><div class="team-small">BMW M Team RLL</div></td>
+                <td><span class="team-small">BMW M Hybrid V8</span></td>
+                <td><span class="gap-time">762</span></td>
+                <td><span class="gap-time">+3 LAPS</span></td>
+            </tr>
+            <tr>
+                <td><span class="pos-num">4</span></td>
+                <td><div class="car-num-badge" style="background:#CC0000;">50</div></td>
+                <td><div class="driver-full">Fuoco / Nielsen / Molina</div><div class="team-small">Ferrari AF Corse</div></td>
+                <td><span class="team-small">Ferrari 499P</span></td>
+                <td><span class="gap-time">760</span></td>
+                <td><span class="gap-time">+5 LAPS</span></td>
+            </tr>
+            <tr>
+                <td><span class="pos-num">5</span></td>
+                <td><div class="car-num-badge" style="background:#EB0A1E;">7</div></td>
+                <td><div class="driver-full">Hartley / Hirakawa / Buemi</div><div class="team-small">Toyota Racing</div></td>
+                <td><span class="team-small">Toyota TR010 Hybrid</span></td>
+                <td><span class="gap-time">758</span></td>
+                <td><span class="gap-time">+7 LAPS</span></td>
+            </tr>
+            </tbody>
+        </table>
+
+        <!-- Championship standings teaser -->
+        <div style="margin-top:48px;">
+            <div class="section-label">// WEC Hypercar Championship · 2026</div>
+            <h3 style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-style:italic;font-size:32px;text-transform:uppercase;margin-bottom:28px;">ЧЕМПИОНАТ</h3>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:2px;">
+                <div style="background:var(--blue-3);padding:20px 24px;display:flex;align-items:center;gap:16px;">
+                    <span style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-style:italic;font-size:48px;color:rgba(255,209,102,.15)">1</span>
+                    <div><div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:17px;text-transform:uppercase">Ferrari AF Corse</div><div style="font-family:'Share Tech Mono',monospace;font-size:13px;color:var(--yellow);margin-top:4px">0 pts</div></div>
+                </div>
+                <div style="background:var(--blue-3);padding:20px 24px;display:flex;align-items:center;gap:16px;">
+                    <span style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-style:italic;font-size:48px;color:rgba(255,255,255,.07)">2</span>
+                    <div><div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:17px;text-transform:uppercase">Porsche Penske</div><div style="font-family:'Share Tech Mono',monospace;font-size:13px;color:var(--gray3);margin-top:4px">0 pts</div></div>
+                </div>
+                <div style="background:var(--blue-3);padding:20px 24px;display:flex;align-items:center;gap:16px;">
+                    <span style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-style:italic;font-size:48px;color:rgba(255,255,255,.06)">3</span>
+                    <div><div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:17px;text-transform:uppercase">Toyota Racing</div><div style="font-family:'Share Tech Mono',monospace;font-size:13px;color:var(--gray3);margin-top:4px">0 pts</div></div>
+                </div>
+                <div style="background:var(--blue-3);padding:20px 24px;display:flex;align-items:center;gap:16px;">
+                    <span style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-style:italic;font-size:48px;color:rgba(255,255,255,.05)">4</span>
+                    <div><div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:17px;text-transform:uppercase">Cadillac Racing</div><div style="font-family:'Share Tech Mono',monospace;font-size:13px;color:var(--gray3);margin-top:4px">0 pts</div></div>
+                </div>
+            </div>
+            <div style="margin-top:16px;font-size:12px;color:var(--gray2);font-family:'Share Tech Mono',monospace;letter-spacing:.15em;">
+                // СЕЗОН 2026 ТОЛЬКО НАЧИНАЕТСЯ — ОЧКИ БУДУТ ОБНОВЛЕНЫ ПОСЛЕ ИМОЛЫ 19 APR
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- FOOTER (shown on all pages) -->
+<footer>
+    <div class="footer-top">
+        <div>
+            <div class="footer-logo">WECkbn<span style="color:var(--blue-bright);">.</span></div>
+            <p class="footer-about">Независимый медиапортал о мировом чемпионате по гонкам на выносливость WEC и американской серии IMSA WeatherTech.</p>
+        </div>
+        <div>
+            <div class="footer-col-title">WEC 2026</div>
+            <ul class="footer-links">
+                <li><a href="#" class="nav-link" data-page="schedule">Календарь WEC</a></li>
+                <li><a href="#" class="nav-link" data-page="teams">Hypercar класс</a></li>
+                <li><a href="#" class="nav-link" data-page="results">Чемпионат</a></li>
+                <li><a href="#" class="nav-link" data-page="news">Ле-Ман 2026</a></li>
+            </ul>
+        </div>
+        <div>
+            <div class="footer-col-title">IMSA</div>
+            <ul class="footer-links">
+                <li><a href="#" class="nav-link" data-page="schedule">Календарь IMSA</a></li>
+                <li><a href="#" class="nav-link" data-page="teams">GTP класс</a></li>
+                <li><a href="#" class="nav-link" data-page="results">Daytona 24h</a></li>
+                <li><a href="#" class="nav-link" data-page="news">Себринг 12h</a></li>
+            </ul>
+        </div>
+        <div>
+            <div class="footer-col-title">Портал</div>
+            <ul class="footer-links">
+                <li><a href="#" class="nav-link" data-page="news">Новости</a></li>
+                <li><a href="#" class="nav-link" data-page="teams">Команды</a></li>
+                <li><a href="#" class="nav-link" data-page="results">Результаты</a></li>
+                <li><a href="#" class="nav-link" data-page="schedule">Расписание</a></li>
+            </ul>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        <div class="footer-copy">© 2026 WECkbn · Все права защищены</div>
+        <div class="footer-series">
+            <span class="series-tag wec-tag">WEC</span>
+            <span class="series-tag imsa-tag">IMSA</span>
+        </div>
+    </div>
+</footer>
+
+<script>
+    // ---- CURSOR ----
+    const cursor = document.getElementById('cursor');
+    const ring = document.getElementById('cursorRing');
+    let mx=0,my=0,rx=0,ry=0;
+    document.addEventListener('mousemove',e=>{
+        mx=e.clientX; my=e.clientY;
+        cursor.style.left=mx+'px'; cursor.style.top=my+'px';
+    });
+    (function animRing(){
+        rx+=(mx-rx)*.12; ry+=(my-ry)*.12;
+        ring.style.left=rx+'px'; ring.style.top=ry+'px';
+        requestAnimationFrame(animRing);
+    })();
+    document.querySelectorAll('a,button').forEach(el=>{
+        el.addEventListener('mouseenter',()=>{cursor.style.width='5px';cursor.style.height='5px';ring.style.width='46px';ring.style.height='46px';});
+        el.addEventListener('mouseleave',()=>{cursor.style.width='10px';cursor.style.height='10px';ring.style.width='32px';ring.style.height='32px';});
+    });
+
+    // ---- PAGE NAVIGATION ----
+    function showPage(id) {
+        document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+        const target = document.getElementById('page-'+id);
+        if(target){ target.classList.add('active'); window.scrollTo({top:0,behavior:'smooth'}); }
+        document.querySelectorAll('.nav-link').forEach(a=>{
+            a.classList.toggle('active', a.dataset.page===id);
+        });
+    }
+
+    document.querySelectorAll('.nav-link').forEach(a=>{
+        a.addEventListener('click', e=>{
+            e.preventDefault();
+            showPage(a.dataset.page);
+        });
+    });
+
+    // ---- SCHEDULE FILTER ----
+    document.querySelectorAll('.filter-btn').forEach(btn=>{
+        btn.addEventListener('click',()=>{
+            document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+            btn.classList.add('active');
+            const f = btn.dataset.filter;
+            document.querySelectorAll('#raceList .race-row').forEach(row=>{
+                if(f==='all') row.style.display='';
+                else row.style.display = row.dataset.series===f ? '' : 'none';
+            });
+        });
+    });
+
+    // ---- TEAMS TAB ----
+    document.querySelectorAll('.tab-btn').forEach(btn=>{
+        btn.addEventListener('click',()=>{
+            document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+            btn.classList.add('active');
+            const t = btn.dataset.tab;
+            document.querySelectorAll('#teamsGrid .team-card').forEach(card=>{
+                card.style.display = card.dataset.class===t ? '' : 'none';
+            });
+        });
+    });
+    // default: show hypercar
+    document.querySelectorAll('#teamsGrid .team-card').forEach(card=>{
+        if(card.dataset.class!=='hypercar') card.style.display='none';
+    });
+</script>
+</body>
+</html>
